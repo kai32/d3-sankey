@@ -49,6 +49,22 @@ function find(nodeById, id) {
   return node;
 }
 
+function defaultComputeLinkBreadths(graph) {
+  graph.nodes.forEach(function(node) {
+    node.sourceLinks.sort(ascendingTargetBreadth);
+    node.targetLinks.sort(ascendingSourceBreadth);
+  });
+  graph.nodes.forEach(function(node) {
+    var y0 = node.y0, y1 = y0;
+    node.sourceLinks.forEach(function(link) {
+      link.y0 = y0 + link.width / 2, y0 += link.width;
+    });
+    node.targetLinks.forEach(function(link) {
+      link.y1 = y1 + link.width / 2, y1 += link.width;
+    });
+  });
+}
+
 export default function() {
   var x0 = 0, y0 = 0, x1 = 1, y1 = 1, // extent
       dx = 24, // nodeWidth
@@ -57,6 +73,7 @@ export default function() {
       align = justify,
       nodes = defaultNodes,
       links = defaultLinks,
+      computeLinkBreadths = defaultComputeLinkBreadths,
       iterations = 32;
 
   function sankey() {
@@ -108,6 +125,10 @@ export default function() {
 
   sankey.iterations = function(_) {
     return arguments.length ? (iterations = +_, sankey) : iterations;
+  };
+
+  sankey.computeLinkBreadths = function(_) {
+    return arguments.length ? (computeLinkBreadths = typeof _ === "function" ? _ : constant(_), sankey) : computeLinkBreadths;
   };
 
   // Populate the sourceLinks and targetLinks for each node.
@@ -261,22 +282,6 @@ export default function() {
         }
       });
     }
-  }
-
-  function computeLinkBreadths(graph) {
-    graph.nodes.forEach(function(node) {
-      node.sourceLinks.sort(ascendingTargetBreadth);
-      node.targetLinks.sort(ascendingSourceBreadth);
-    });
-    graph.nodes.forEach(function(node) {
-      var y0 = node.y0, y1 = y0;
-      node.sourceLinks.forEach(function(link) {
-        link.y0 = y0 + link.width / 2, y0 += link.width;
-      });
-      node.targetLinks.forEach(function(link) {
-        link.y1 = y1 + link.width / 2, y1 += link.width;
-      });
-    });
   }
 
   return sankey;
